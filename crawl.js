@@ -41,11 +41,13 @@ async function crawlPage(baseURL, currentURL = baseURL, pages={}) {
 
     pages[normalizedURL] = {
         count: 1,
+        loadTimeMs: null,
         errors: []
     }
 
     console.log(`crawling ${currentURL}`)
 
+    const timeStart = performance.now()
     let htmlText
     try {
         htmlText = await fetchURL(currentURL)
@@ -53,11 +55,12 @@ async function crawlPage(baseURL, currentURL = baseURL, pages={}) {
         pages[normalizedURL].errors.push(err)
         return pages
     }
+    const timeEnd = performance.now()
+    pages[normalizedURL].loadTimeMs = timeEnd - timeStart
 
     const URLs = getURLsFromHTML(htmlText, baseURL)
 
     if (URLs.length) {
-        console.log('URLS', URLs)
         for (const url of URLs) {
             pages = await crawlPage(baseURL, url, pages)
         }
@@ -88,6 +91,8 @@ async function fetchURL(currentURL) {
     if (!contentType || !contentType.includes('text/html')) {
         throw new Error(`Unexpected content type at URL: ${contentType}`)
     }
+
+    response
 
     return response.text();
 }
