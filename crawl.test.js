@@ -1,5 +1,5 @@
 import { expect, describe, it} from "@jest/globals"
-import {normalizeURL, getURLsFromHTML} from "./crawl.js";
+import {normalizeURL, getURLsFromHTML, sortPages} from "./crawl.js";
 
 describe('normalizeURL', () => {
     it('strips out protocol and trailing slash', () => {
@@ -144,4 +144,22 @@ describe('getURLsFromHTML', () => {
         expect(links).toHaveLength(1)
         expect(links).toContain('https://example.com/')
     })
+});
+
+describe('sortPages', () => {
+    it('should sort pages according to count', () => {
+        const pages = {
+            'example.com': { count: 15 },
+            'example.com/test': { count: 1 },
+            'example.com/blog': { count: 5 },
+        }
+
+        const expected = {
+            'example.com': { count: 15 },
+            'example.com/blog': { count: 5 },
+            'example.com/test': { count: 1 },
+        }
+
+        expect(sortPages(pages)).toEqual(expected)
+    });
 });

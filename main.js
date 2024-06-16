@@ -1,5 +1,5 @@
 import {argv, exit} from 'node:process'
-import {crawlPage} from './crawl.js'
+import {crawlPage, printReport, sortPages} from './crawl.js'
 
 async function main() {
     const args = argv.slice(2)
@@ -22,27 +22,11 @@ async function main() {
     console.log(`Starting to crawl ${baseURL}`)
     const pages = await crawlPage(baseURL)
 
-    console.log('pages', pages)
-    console.log('average load time', averageLoadTime(pages))
+    printReport(sortPages(pages))
 }
 
 function showUsage() {
     console.log('Usage: npm run start {base_url}')
-}
-
-function averageLoadTime(pages) {
-    if (pages.length<1) {
-        return 0;
-    }
-
-    let total = 0
-    const keys = Object.keys(pages)
-
-    for (const page of keys) {
-        total += pages[page].loadTimeMs
-    }
-
-    return total/keys.length
 }
 
 await main()

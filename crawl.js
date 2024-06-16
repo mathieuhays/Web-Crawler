@@ -92,9 +92,43 @@ async function fetchURL(currentURL) {
         throw new Error(`Unexpected content type at URL: ${contentType}`)
     }
 
-    response
-
     return response.text();
 }
 
-export {normalizeURL, getURLsFromHTML, crawlPage};
+function sortPages(pages) {
+    const keys = Object.keys(pages)
+    const sortedKeys = keys.sort((a, b) => {
+        return pages[b].count - pages[a].count
+    })
+    let final = {}
+
+    for (const key of sortedKeys) {
+        final[key] = pages[key]
+    }
+
+    return final
+}
+
+function printReport(pages) {
+    const keys = Object.keys(pages)
+
+    if (keys.length < 1) {
+        console.log('No results to show')
+        return
+    }
+
+    let total = 0
+
+    for (const key of keys) {
+        const page = pages[key]
+        const prettyTime = Math.round(page.loadTimeMs*100)/100
+        total += page.loadTimeMs
+        console.log(`Found ${page.count} internal links to ${key}. This page takes ${prettyTime}ms to load.`)
+    }
+
+    const averageLoadTime = total/keys.length
+    const prettyAverage = Math.round(averageLoadTime*100)/100
+    console.log(`The website took an average of ${prettyAverage}ms to respond`)
+}
+
+export {normalizeURL, getURLsFromHTML, crawlPage, printReport, sortPages};
