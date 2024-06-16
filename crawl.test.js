@@ -15,6 +15,10 @@ describe('normalizeURL', () => {
         expect(normalizeURL('http://example.com/test/?test')).toBe('example.com/test')
     })
 
+    it('has consistent casing', () => {
+        expect(normalizeURL('https://www.example.com/BLOG')).toBe('www.example.com/blog')
+    })
+
     it('throws when invalid url is provided', () => {
         expect(() => {
             normalizeURL('example.com/test')

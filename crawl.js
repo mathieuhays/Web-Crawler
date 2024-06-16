@@ -6,7 +6,7 @@ function normalizeURL(url) {
         path = path.slice(0, -1)
     }
 
-    return `${urlObj.hostname}${path}`
+    return `${urlObj.hostname}${path}`.toLowerCase()
 }
 
 export {normalizeURL};
