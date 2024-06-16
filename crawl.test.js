@@ -125,4 +125,23 @@ describe('getURLsFromHTML', () => {
         expect(links).toHaveLength(1)
         expect(links).toContain('https://example.com/blog')
     })
+
+    it('detects links and not anchors', () => {
+        const html = `
+        <!doctype html>
+        <html>
+        <head></head>
+        <body>
+            <a href="tel:09987654321">phone link</a>
+            <a href="mailto:john@example.com">email link</a>
+            <a href="https://example.com">URL link</a>
+        </body>
+        </html>
+        `
+
+        const links = getURLsFromHTML(html, 'https://example.com')
+
+        expect(links).toHaveLength(1)
+        expect(links).toContain('https://example.com/')
+    })
 });

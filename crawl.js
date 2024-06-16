@@ -19,7 +19,7 @@ function getURLsFromHTML(htmlBody, baseURL) {
     let URLs = []
 
     for (const link of links) {
-        if (link.href) {
+        if (link.href && link.href.startsWith('http')) {
             URLs.push(link.href)
         }
     }
@@ -27,4 +27,69 @@ function getURLsFromHTML(htmlBody, baseURL) {
     return URLs
 }
 
-export {normalizeURL, getURLsFromHTML};
+async function crawlPage(baseURL, currentURL = baseURL, pages={}) {
+    if ((new URL(baseURL)).hostname !== (new URL(currentURL)).hostname) {
+        return pages
+    }
+
+    const normalizedURL = normalizeURL(currentURL)
+
+    if (normalizedURL in pages) {
+        pages[normalizedURL].count++
+        return pages
+    }
+
+    pages[normalizedURL] = {
+        count: 1,
+        errors: []
+    }
+
+    console.log(`crawling ${currentURL}`)
+
+    let htmlText
+    try {
+        htmlText = await fetchURL(currentURL)
+    } catch (err) {
+        pages[normalizedURL].errors.push(err)
+        return pages
+    }
+
+    const URLs = getURLsFromHTML(htmlText, baseURL)
+
+    if (URLs.length) {
+        console.log('URLS', URLs)
+        for (const url of URLs) {
+            pages = await crawlPage(baseURL, url, pages)
+        }
+    }
+
+    return pages;
+}
+
+async function fetchURL(currentURL) {
+    let response
+    try {
+        response = await fetch(currentURL, {
+            method: 'GET'
+        })
+    } catch (err) {
+        throw new Error(`Request Error: ${err.message}`)
+    }
+
+    if (response.status >= 400) {
+        throw new Error(`Couldn't fetch URL. Status: ${response.statusText} (${response.status})`)
+    }
+
+    let contentType
+    try {
+        contentType = response.headers.get('Content-Type')
+    } catch (err) {}
+
+    if (!contentType || !contentType.includes('text/html')) {
+        throw new Error(`Unexpected content type at URL: ${contentType}`)
+    }
+
+    return response.text();
+}
+
+export {normalizeURL, getURLsFromHTML, crawlPage};
