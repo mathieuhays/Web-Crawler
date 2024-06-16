@@ -1,5 +1,5 @@
 import { expect, describe, it} from "@jest/globals"
-import {normalizeURL} from "./crawl.js";
+import {normalizeURL, getURLsFromHTML} from "./crawl.js";
 
 describe('normalizeURL', () => {
     it('strips out protocol and trailing slash', () => {
@@ -26,3 +26,103 @@ describe('normalizeURL', () => {
     })
 })
 
+describe('getURLsFromHTML', () => {
+    it('detects a absolute link', () => {
+        const html = `
+        <!doctype html>
+        <html>
+        <head></head>
+        <body>
+            <p>
+                random content
+            </p>
+            <p>
+                more content <a href="https://boot.dev">with a link</a>
+            </p>
+        </body>
+        </html>
+        `
+
+        const links = getURLsFromHTML(html, 'https://example.com')
+
+        expect(links).toHaveLength(1)
+        expect(links).toContain('https://boot.dev/')
+    })
+
+    it('detects a relative link', () => {
+        const html = `
+        <!doctype html>
+        <html>
+        <head></head>
+        <body>
+            <p>
+                random content
+            </p>
+            <p>
+                more content <a href="/blog">with a link</a>
+            </p>
+        </body>
+        </html>
+        `
+
+        const links = getURLsFromHTML(html, 'https://example.com')
+
+        expect(links).toHaveLength(1)
+        expect(links).toContain('https://example.com/blog')
+    })
+
+    it('detects link with HTML missing its doctype', () => {
+        const html = `
+        <p>some content</p>
+        <a href="https://example.com">link</a>
+        `
+
+        const links = getURLsFromHTML(html, 'https://example.com')
+
+        expect(links).toHaveLength(1)
+        expect(links).toContain('https://example.com/')
+    })
+
+    it('detects multiple links', () => {
+        const html = `
+        <!doctype html>
+        <html>
+        <head></head>
+        <body>
+            <p>
+                random content <a href="https://google.com">first link</a>
+            </p>
+            <p>
+                more content <a href="/blog">with a link</a>
+            </p>
+            <a href="#">third link</a>
+        </body>
+        </html>
+        `
+
+        const links = getURLsFromHTML(html, 'https://example.com')
+
+        expect(links).toHaveLength(3)
+        expect(links).toContain('https://example.com/blog')
+    })
+
+    it('detects links and not anchors', () => {
+        const html = `
+        <!doctype html>
+        <html>
+        <head></head>
+        <body>
+            <p>
+                Some content <a href="/blog">with a link</a>
+            </p>
+            <a id="anchor">I'm not a link</a>
+        </body>
+        </html>
+        `
+
+        const links = getURLsFromHTML(html, 'https://example.com')
+
+        expect(links).toHaveLength(1)
+        expect(links).toContain('https://example.com/blog')
+    })
+});
